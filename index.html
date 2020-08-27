@@ -34,13 +34,13 @@
     <script>
         /** 表情リスト */
         const EXPRESSION_LIST = [
-            { id: " angry", word: "怒って～" },
-            { id: " disgusted", word: "うんざりして～" },
-            { id: " fearful", word: "恐れて～" },
-            { id: " happy", word: "笑って～" },
-            { id: " neutral", word: "無表情で～" },
-            { id: " sad", word: "悲しんで～" },
-            { id: " surprised", word: "驚いて～" }
+            { id: "angry", word: "怒って～" },
+            { id: "disgusted", word: "うんざりして～" },
+            { id: "fearful", word: "恐れて～" },
+            { id: "happy", word: "笑って～" },
+            { id: "neutral", word: "無表情で～" },
+            { id: "sad", word: "悲しんで～" },
+            { id: "surprised", word: "驚いて～" }
         ]
         new Vue({
             el: '#app',
@@ -65,9 +65,9 @@
                         )
                             .withFaceLandmarks()
                             .withFaceExpressions();
-
-                        if (detections && detections[0]) {
-                            detections[0].expressions
+                        console.log(detections[0])
+                        if (this.isOK(detections)) {
+                            alert(`${this.currentWantExpressionID}!`)
                         }
                         // // 顔データをリサイズ
                         // const resizedDetections = faceapi.resizeResults(detections, {
@@ -85,6 +85,14 @@
                     const next = EXPRESSION_LIST[Math.floor(Math.random() * EXPRESSION_LIST.length)];
                     this.currentWantExpressionID = next.id;
                     this.currentWantExpressionWord = next.word;
+                },
+                /** 写っている全員が現在指定されている表情になっているか */
+                isOK(detections) {
+                    console.log("isok")
+                    if (detections && detections[0]) {
+                        return detections.filter(v => v.expressions[this.currentWantExpressionID] > 0.9).length === detections.length
+                    }
+                    return false;
                 }
             },
             mounted() {
