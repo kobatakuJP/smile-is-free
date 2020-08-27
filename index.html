@@ -2,24 +2,109 @@
 <html>
 
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/websaite#">
-  <meta property="og:url" content="http://★ページのURL" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="★SNSで表示されるタイトル" />
-  <meta property="og:description" content="★SNSで表示される説明" />
-  <meta property="og:image" content="★SNSで表示される画像" />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>★タブに表示されるタイトル</title>
-  <meta content="★説明を入れる" name="description" />
-  <link rel="stylesheet" type="text/css" href="./css/★.cssのパス" />
-  <!-- IE対応するなら <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.0.0/polyfill.min.js"></script> -->
-  <!-- IE対応するなら(Promise) <script src="https://cdn.jsdelivr.net/npm/promise-polyfill"></script> -->
-  <!-- BootStrapなら <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous" /> -->
+    <meta property="og:url" content="http://★ページのURL" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="★SNSで表示されるタイトル" />
+    <meta property="og:description" content="★SNSで表示される説明" />
+    <meta property="og:image" content="★SNSで表示される画像" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>★タブに表示されるタイトル</title>
+    <meta content="★説明を入れる" name="description" />
+    <link rel="stylesheet" type="text/css" href="./css/★.cssのパス" />
+    <style>
+        #app {
+            position: relative;
+        }
+
+        #app * {
+            position: fixed;
+        }
+    </style>
 </head>
 
 <body>
-  <div></div>
-  <script src="js/★JSのパス"></script>
+    <div id="app">
+        <video ref="video" width="720" height="560" @play="onPlay"></video>
+        <canvas ref="canvas" width="720" height="560"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"></script>
+    <script src="js/face-api.min.js"></script>
+    <img src="img/cameko.png" />
+    <script>
+        /** 表情リスト */
+        const EXPRESSION_LIST = [
+            { id: " angry", word: "怒って～" },
+            { id: " disgusted", word: "うんざりして～" },
+            { id: " fearful", word: "恐れて～" },
+            { id: " happy", word: "笑って～" },
+            { id: " neutral", word: "無表情で～" },
+            { id: " sad", word: "悲しんで～" },
+            { id: " surprised", word: "驚いて～" }
+        ]
+        new Vue({
+            el: '#app',
+            data: {
+                MODEL_URI: '/js/models',   // 顔認識モデルの場所
+                currentWantExpressionID: EXPRESSION_LIST[3].id,
+                currentWantExpressionWord: EXPRESSION_LIST[3].word,
+            },
+            computed: {
+                video() { return this.$refs['video']; },
+                canvas() { return this.$refs['canvas']; }
+            },
+            methods: {
+                onPlay() {
+                    const video = this.video;
+                    const canvas = this.canvas;
+                    setInterval(async () => {
+                        // ウェブカメラの映像から顔データを取得
+                        const detections = await faceapi.detectAllFaces(
+                            this.video,
+                            new faceapi.TinyFaceDetectorOptions()
+                        )
+                            .withFaceLandmarks()
+                            .withFaceExpressions();
+
+                        if (detections && detections[0]) {
+                            detections[0].expressions
+                        }
+                        // // 顔データをリサイズ
+                        // const resizedDetections = faceapi.resizeResults(detections, {
+                        //     width: video.width,
+                        //     height: video.height
+                        // });
+                        // // キャンバスに描画
+                        // canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                        // faceapi.draw.drawDetections(canvas, resizedDetections);
+                        // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                        // faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+                    }, 500);
+                },
+                updateExpression() {
+                    const next = EXPRESSION_LIST[Math.floor(Math.random() * EXPRESSION_LIST.length)];
+                    this.currentWantExpressionID = next.id;
+                    this.currentWantExpressionWord = next.word;
+                }
+            },
+            mounted() {
+                // 顔モデルをロード
+                Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri(this.MODEL_URI),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(this.MODEL_URI),
+                    faceapi.nets.faceExpressionNet.loadFromUri(this.MODEL_URI)
+                ])
+                    .then(() => {
+                        // ウェブカメラへアクセス
+                        navigator.mediaDevices.getUserMedia({ video: true })
+                            .then((stream) => {
+                                this.video.srcObject = stream;
+                                this.video.play();
+                            });
+                    });
+            }
+        });
+    </script>
 </body>
 
 </html>
