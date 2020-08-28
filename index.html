@@ -90,7 +90,7 @@
                 isOK(detections) {
                     console.log("isok")
                     if (detections && detections[0]) {
-                        return detections.filter(v => v.expressions[this.currentWantExpressionID] > 0.9).length === detections.length
+                        return detections.filter(v => v.expressions[this.currentWantExpressionID] > 0.95).length === detections.length
                     }
                     return false;
                 }
