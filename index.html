@@ -25,12 +25,19 @@
 
 <body>
     <div id="app">
-        <video ref="video" width="400" height="400" @play="onPlay"></video>
+        <video ref="video" width="400" height="400" @play="onPlay" @pause="onPause"></video>
         <canvas ref="canvas" width="400" height="400"></canvas>
         <div class="arrow_box" style="left: 200px; position: relative">
-            <div style="position: absolute; top:50%;left:50%;transform:translateY(-50%) translateX(-50%);">はい{{cameraComment}}</div>
+            <div style="position: absolute; top:50%;left:50%;transform:translateY(-50%) translateX(-50%);">はい
+                {{cameraComment}}</div>
         </div>
         <img src="img/cameko.png" style="width: 200px; left: 300px; top: 100px;" />
+        <div style="left: 350px; top: 300px;">
+            <div v-for="p in points">
+                <div style="background-color: white;">{{p}}点！</div>
+            </div>
+        </div>
+        <button @click="next">次のお題</button>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"></script>
     <script src="js/face-api.min.js"></script>
@@ -54,16 +61,18 @@
                 MODEL_URI: '/js/models',   // 顔認識モデルの場所
                 currentWantExpressionID: EXPRESSION_LIST[3].id,
                 cameraComment: EXPRESSION_LIST[3].word,
+                intervalID: -1,
+                points: []
             },
             computed: {
                 video() { return this.$refs['video']; },
-                canvas() { return this.$refs['canvas']; }
+                canvas() { return this.$refs['canvas']; },
             },
             methods: {
                 onPlay() {
                     const video = this.video;
                     const canvas = this.canvas;
-                    setInterval(async () => {
+                    this.intervalID = setInterval(async () => {
                         // 参考URL https://blog.capilano-fw.com/?p=4063
                         // ウェブカメラの映像から顔データを取得
                         const detections = await faceapi.detectAllFaces(
@@ -72,8 +81,10 @@
                         )
                             .withFaceLandmarks()
                             .withFaceExpressions();
+                        this.updatePoints(detections);
                         if (this.isOK(detections)) {
-                            alert(`${this.currentWantExpressionID}!`)
+                            this.cameraComment = "いただきました！"
+                            video.pause();
                         }
                         // 顔データをリサイズ
                         const resizedDetections = faceapi.resizeResults(detections, {
@@ -84,8 +95,11 @@
                         canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
                         faceapi.draw.drawDetections(canvas, resizedDetections);
                         // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-                        faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+                        // faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
                     }, 500);
+                },
+                onPause() {
+                    if (this.intervalID > -1) clearInterval(this.intervalID);
                 },
                 updateExpression() {
                     const next = EXPRESSION_LIST[Math.floor(Math.random() * EXPRESSION_LIST.length)];
@@ -94,11 +108,20 @@
                 },
                 /** 写っている全員が現在指定されている表情になっているか */
                 isOK(detections) {
-                    console.log("isok")
                     if (detections && detections[0]) {
                         return detections.filter(v => v.expressions[this.currentWantExpressionID] > 0.95).length === detections.length
                     }
                     return false;
+                },
+                updatePoints(detections) {
+                    if (detections && detections[0]) {
+                        this.points.splice(-this.points.length);
+                        detections.map(v => this.points.push(Math.floor(v.expressions[this.currentWantExpressionID] * 100)))
+                    }
+                },
+                next() {
+                    this.updateExpression();
+                    this.video.play();
                 }
             },
             mounted() {
