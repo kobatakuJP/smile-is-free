@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>★タブに表示されるタイトル</title>
     <meta content="★説明を入れる" name="description" />
-    <link rel="stylesheet" type="text/css" href="./css/★.cssのパス" />
+    <link rel="stylesheet" type="text/css" href="./css/index.css" />
     <style>
         #app {
             position: relative;
@@ -25,12 +25,18 @@
 
 <body>
     <div id="app">
-        <video ref="video" width="720" height="560" @play="onPlay"></video>
-        <canvas ref="canvas" width="720" height="560"></canvas>
+        <video ref="video" width="400" height="400" @play="onPlay"></video>
+        <canvas ref="canvas" width="400" height="400"></canvas>
+        <div class="arrow_box" style="left: 200px; position: relative">
+            <div style="position: absolute; top:50%;left:50%;transform:translateY(-50%) translateX(-50%);">はい{{cameraComment}}</div>
+        </div>
+        <img src="img/cameko.png" style="width: 200px; left: 300px; top: 100px;" />
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"></script>
     <script src="js/face-api.min.js"></script>
-    <img src="img/cameko.png" />
+    <span style="position:fixed;bottom:0;right:0;">Powered by <a href="https://github.com/justadudewhohacks/face-api.js"
+            target="_blank">face-api.js</a></span>
+
     <script>
         /** 表情リスト */
         const EXPRESSION_LIST = [
@@ -47,7 +53,7 @@
             data: {
                 MODEL_URI: '/js/models',   // 顔認識モデルの場所
                 currentWantExpressionID: EXPRESSION_LIST[3].id,
-                currentWantExpressionWord: EXPRESSION_LIST[3].word,
+                cameraComment: EXPRESSION_LIST[3].word,
             },
             computed: {
                 video() { return this.$refs['video']; },
@@ -58,6 +64,7 @@
                     const video = this.video;
                     const canvas = this.canvas;
                     setInterval(async () => {
+                        // 参考URL https://blog.capilano-fw.com/?p=4063
                         // ウェブカメラの映像から顔データを取得
                         const detections = await faceapi.detectAllFaces(
                             this.video,
@@ -65,26 +72,25 @@
                         )
                             .withFaceLandmarks()
                             .withFaceExpressions();
-                        console.log(detections[0])
                         if (this.isOK(detections)) {
                             alert(`${this.currentWantExpressionID}!`)
                         }
-                        // // 顔データをリサイズ
-                        // const resizedDetections = faceapi.resizeResults(detections, {
-                        //     width: video.width,
-                        //     height: video.height
-                        // });
-                        // // キャンバスに描画
-                        // canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-                        // faceapi.draw.drawDetections(canvas, resizedDetections);
+                        // 顔データをリサイズ
+                        const resizedDetections = faceapi.resizeResults(detections, {
+                            width: video.width,
+                            height: video.height
+                        });
+                        // キャンバスに描画
+                        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                        faceapi.draw.drawDetections(canvas, resizedDetections);
                         // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-                        // faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+                        faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
                     }, 500);
                 },
                 updateExpression() {
                     const next = EXPRESSION_LIST[Math.floor(Math.random() * EXPRESSION_LIST.length)];
                     this.currentWantExpressionID = next.id;
-                    this.currentWantExpressionWord = next.word;
+                    this.cameraComment = next.word;
                 },
                 /** 写っている全員が現在指定されている表情になっているか */
                 isOK(detections) {

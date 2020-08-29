@@ -1,0 +1,45 @@
+/* generate by https://generator.web-alpha.info/fukidashi/index.php */
+.arrow_box{
+    position:relative;
+    width:300px;
+    height:70px;
+    background:#FF9292;
+    text-align:center;
+    border:5px solid #D37979;
+    color:#FFFFFF;
+    font-size:20px;
+    font-weight:bold;
+    border-radius:40px;
+    -webkit-border-radius:40px;
+    -moz-border-radius:40px;
+    text-shadow:0px 0px 0px #FFFFFF ;
+}
+.arrow_box:after,.arrow_box:before{
+    border: solid transparent;
+    content:'';
+    height:0;
+    width:0;
+    pointer-events:none;
+    position:absolute;
+    top:100%;
+    left:77%;
+}
+.arrow_box:after{
+    border-color: rgba(255, 146, 146, 0);
+    border-top-width:20px;
+    border-bottom-width:20px;
+    border-left-width:15px;
+    border-right-width:15px;
+    margin-left: -15px;
+    border-top-color:#FF9292;
+}
+.arrow_box:before{
+    border-color: rgba(211, 121, 121, 0);
+    border-top-width:26px;
+    border-bottom-width:26px;
+    border-left-width:20px;
+    border-right-width:20px;
+    margin-left: -20px;
+    margin-top: 5px;
+    border-top-color:#D37979;
+}
