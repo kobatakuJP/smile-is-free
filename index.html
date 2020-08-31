@@ -4,12 +4,12 @@
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/websaite#">
     <meta property="og:url" content="https://kobatakujp.github.io/smile-is-free/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="はい笑顔で～" />
-    <meta property="og:description" content="Webカメラを使っていろんな表情をしましょう。さあ、恥ずかしがらず。※一部難易度高い表情があるので、「次のお題」を押してスキップしましょう。" />
+    <meta property="og:title" content="はい笑って～" />
+    <meta property="og:description" content="Webカメラを使っていろんな表情をしましょう。表情がキまるとカメラマンがいただいてくれます。さあ、恥ずかしがらず。※難しいお題は「次のお題」を押してスキップしましょう。表情のヒントはこちらを参考に→https://justadudewhohacks.github.io/face-api.js/docs/index.html" />
     <meta property="og:image" content="https://kobatakujp.github.io/smile-is-free/img/cameko.png" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>はい笑顔で～</title>
+    <title>はい 笑って～</title>
     <meta content="Webカメラを使っていろんな表情をしましょう。さあ、恥ずかしがらず。※一部難易度高い表情があるので、「次のお題」を押してスキップしましょう。" name="description" />
     <link rel="stylesheet" type="text/css" href="./css/index.css" />
     <style>
@@ -28,7 +28,7 @@
         <video ref="video" width="400" height="400" @play="onPlay" @pause="onPause"></video>
         <canvas ref="canvas" width="400" height="400"></canvas>
         <div class="arrow_box" style="left: 200px; position: relative">
-            <div style="position: absolute; top:50%;left:50%;transform:translateY(-50%) translateX(-50%);">はい
+            <div style="position: absolute; top:50%;left:50%;transform:translateY(-50%) translateX(-50%);">
                 {{cameraComment}}</div>
         </div>
         <img src="img/cameko.png" style="width: 200px; left: 300px; top: 100px;" />
@@ -60,13 +60,19 @@
             data: {
                 MODEL_URI: './js/models',   // 顔認識モデルの場所
                 currentWantExpressionID: EXPRESSION_LIST[3].id,
-                cameraComment: EXPRESSION_LIST[3].word,
+                word: EXPRESSION_LIST[3].word,
                 intervalID: -1,
                 points: []
             },
             computed: {
                 video() { return this.$refs['video']; },
                 canvas() { return this.$refs['canvas']; },
+                cameraComment() { return `はい ${this.word}` }
+            },
+            watch: {
+                cameraComment: function (v) {
+                    document.title = v;
+                }
             },
             methods: {
                 onPlay() {
@@ -83,7 +89,7 @@
                             .withFaceExpressions();
                         this.updatePoints(detections);
                         if (this.isOK(detections)) {
-                            this.cameraComment = "いただきました！"
+                            this.word = "いただきました！"
                             video.pause();
                         }
                         // 顔データをリサイズ
@@ -104,7 +110,7 @@
                 updateExpression() {
                     const next = EXPRESSION_LIST[Math.floor(Math.random() * EXPRESSION_LIST.length)];
                     this.currentWantExpressionID = next.id;
-                    this.cameraComment = next.word;
+                    this.word = next.word;
                 },
                 /** 写っている全員が現在指定されている表情になっているか */
                 isOK(detections) {
